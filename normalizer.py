@@ -51,7 +51,7 @@ class TextNormalizer:
         s = re.sub(r"\(([^)]+?)\)", "", s)  # remove words between parenthesis
         s = s.replace("\n", " ")  # remove new line
         s = s.replace("\xa0", "")  # remove non-breaking space
-        s = re.sub(r"mmm|euh", "", s)  # remove disfluencies
+        s = re.sub(r"mmm|euh", "", s)  # remove fillers
         s = self.clean(s).lower()
         s = re.sub(r"\s+", " ", s)  # replace one or more whitespace with only one
         s = re.sub(
