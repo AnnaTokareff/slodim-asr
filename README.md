@@ -25,14 +25,16 @@
 }
 ```
 
-- OpenAI Whisper paper
+- OpenAI Whisper
 
 ```bibtex
 @article{radford2022robust,
   title={Robust speech recognition via large-scale weak supervision},
   author={Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},
-  journal={arXiv preprint arXiv:2212.04356},
+  journal={GitHub repository},
+  publisher={GitHub}
   year={2022}
+  howpublished = {\url{https://github.com/openai/whisper}}
 }
 ```
 
