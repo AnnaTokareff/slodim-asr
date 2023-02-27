@@ -9,15 +9,24 @@ from pyannote.audio import Pipeline
 
 from normalizer import TextNormalizer
 
+input_file = "BOC-066"
+
 # spacer
 spacermilli = 2000
 spacer = AudioSegment.silent(duration=spacermilli)
 
-audio = AudioSegment.from_file("./audio/BOC-066_5min.m4a")  # lecun1.wav
+audio = AudioSegment.from_file("./audio/BOC-066.m4a")  # lecun1.wav
+# check input size
+input_length = audio.duration_seconds * 1000
+kernel_size = spacermilli
 
-audio = spacer.append(audio, crossfade=0)
+# if kernel size > input size, we change kernel size
+if kernel_size > input_length:
+    kernel_size = input_length
 
-audio.export("./audio/temp.wav", format="wav")
+# append audio with adjusted kernel size
+audio = spacer.append(audio, crossfade=kernel_size)
+audio.export("./audio/BOC-066_spaced.wav", format="wav")
 
 # log in huggingface_hub
 login()
@@ -26,7 +35,7 @@ login()
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization", use_auth_token=True)
 
 print("Diarizing...")
-DEMO_FILE = {"audio": "./audio/temp.wav", "num_speakers": 2}
+DEMO_FILE = {"audio": "./audio/BOC-066_spaced.wav", "num_speakers": 2}
 dz = pipeline(DEMO_FILE)
 
 with open("diarization.txt", "w") as text_file:
@@ -83,6 +92,7 @@ for g in groups:
     audio[start:end].export(f"./temp/{gidx}.wav", format="wav")
     audio_paths.append(f"./temp/{gidx}.wav")
 
+
 # transcription
 print("Loading the model...")
 model = pickle.load(open("wav2vec_xls_r_1b_french.pkl", "rb"))
@@ -94,14 +104,14 @@ print("Transcribing...")
 transcription = ""
 
 results = model.transcribe(audio_paths)
-with open("./transcription/temp.json", "w") as f:
+with open("./transcription/boc-066.json", "w") as f:
     json.dump(results, f)
 
 for result in results:
     transcription += result["transcription"]
 
 print("Loading target...")
-with open("./txt/P39682 - boc-066.zip (1)_5min.txt", "r", encoding="utf8") as f:
+with open("./txt/P39682 - boc-066.zip (1).txt", "r", encoding="utf8") as f:
     target = f.read()
 
 normalizer = TextNormalizer()
@@ -109,6 +119,7 @@ normalizer = TextNormalizer()
 transcription = normalizer(transcription)
 target = normalizer(target)
 
-print("Calculating WER...")
-wer = jiwer.wer(transcription, target)
-print(f"WER: {wer}")
+print("Calculating score...")
+wer = jiwer.wer(target, transcription)
+cer = jiwer.cer(target, transcription)
+print(f"WER: {wer}, CER: {cer}")
