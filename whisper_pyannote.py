@@ -80,7 +80,7 @@ for g in groups:
 
 # run whisper
 print("Transcribing...")
-model = whisper.load_model("medium")
+model = whisper.load_model("large")
 
 transcription = ""
 for i in range(gidx + 1):
