@@ -11,17 +11,17 @@
 
 <h2 align="left" id="To do list"> To do list🗓</h2>
 
-* [] Test each model on the whole dataset
+* [ ] Test each model on the whole dataset
 
-* [] Fix problem with saving aligned data for WhisperX
+* [ ] Fix problem with saving aligned data for WhisperX
 
-* [] Train Wav2Vec on our data
+* [ ] Train Wav2Vec on our data
 
-* [] Test Wav2Vec and get the transcriptions
+* [ ] Test Wav2Vec and get the transcriptions
 
-* [] Figure out how to deal with disfluencies
+* [ ] Figure out how to deal with disfluencies
 
-* [] Find the ways to detect backchannels
+* [ ] Find the ways to detect backchannels
 
 
 
