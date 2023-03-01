@@ -9,6 +9,21 @@
 
 - [Normalizer](normalizer.py)
 
+<h2 align="left" id="To do list"> To do list🗓</h2>
+
+* [] Test each model on the whole dataset
+
+* [] Fix problem with saving aligned data for WhisperX
+
+* [] Train Wav2Vec on our data
+
+* [] Test Wav2Vec and get the transcriptions
+
+* [] Figure out how to deal with disfluencies
+
+* [] Find the ways to detect backchannels
+
+
 
 ## Citations
 
