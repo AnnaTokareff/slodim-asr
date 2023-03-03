@@ -61,3 +61,13 @@ def save_as_txt_file(text, audio_name):
     with open(f'{audio_name}_transcribed.txt', 'w') as txt_file:
       txt_file.write(text)
     print("txt file saved!")
+    
+ 
+def convert_into_right_format_whisperX(result_aligned):
+  """ function for converting res_aligned
+  into a proper format for avoiding errors """
+
+  for i, el in enumerate(result_aligned["segments"]):
+      el["word-segments"] = el["word-segments"].to_dict()
+      el["char-segments"] = el["char-segments"].to_dict()
+  return result_aligned
