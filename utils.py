@@ -49,18 +49,15 @@ def save_as_json_file(res_dict, audio_name):
     res_dict: dict, results of processing one audio file
     audio_name: str, can be path to one file or just a name
     """
-  with open(f'{audio_name}_transcribed.json', 'w') as json_file:
-    json.dump(dict, json_file)
-  print("json file saved!")
-
-
+    with open(f'{audio_name}_transcribed.json', 'w') as json_file:
+      json.dump(res_dict, json_file)
+    print("json file saved!")
 
 def save_as_txt_file(text, audio_name):
-     """
-    save the transcriptions to txt file
+    """save the transcriptions to txt file
     text: str, transcriptions
     audio_name: str, can be path to one file or just a name
     """
-  with open(f'{audio_name}_transcribed.txt', 'w') as txt_file:
-    txt_file.write(text)
-  print("txt file saved!")
+    with open(f'{audio_name}_transcribed.txt', 'w') as txt_file:
+      txt_file.write(text)
+    print("txt file saved!")
