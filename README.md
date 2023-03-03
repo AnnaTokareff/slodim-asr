@@ -14,7 +14,7 @@
 
 * [ ] Test each model on the whole dataset
 
-* [ ] Fix problem with saving aligned data for WhisperX
+* [*] Fix problem with saving aligned data for WhisperX
 
 * [ ] Train Wav2Vec on our data
 
