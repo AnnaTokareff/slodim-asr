@@ -2,7 +2,7 @@ import jiwer
 import whisperx
 import pandas as pd
 from normalizer import TextNormalizer
-from utils import load_paths, load_target, save_as_txt_file,  save_as_txt_file
+from utils import load_paths, load_target, save_as_txt_file,  save_as_txt_file, convert_into_right_format_whisperX
 #!pip install git+https://github.com/m-bain/whisperx.git
 
 def load_model(size="base", device="cpu"):
@@ -22,7 +22,7 @@ def transcribe(audio_paths, model, align=False, device="cpu"):
     or without hard alignment 
     audio_paths: list(str)
     model: model object
-    align: boolean (True by default)
+    align: boolean (False by default)
     device: str (cpu be default)
     return: transcriptions( list(str) )
     """
@@ -41,11 +41,12 @@ def transcribe(audio_paths, model, align=False, device="cpu"):
       if align:
         # align whisper output
           res_aligned = whisperx.align(result["segments"], model_a, metadata, audio_path, device)
-          #save_as_json_file(res_aligned, audio_path) # save aligned in json file
+          res_aligned = convert_into_right_format_whisperX(res_aligned)
+          save_as_json_file(res_aligned, audio_path) # save aligned in json file
       else:
         save_as_json_file(results, audio_path) # save not aligned in json file
       print(f"{audio_paths.index(audio_path) + 1} / {len(audio_paths)} finished")
-    
+
     return transcriptions
       
 def text_normalization(targets, transcriptions):
