@@ -1,4 +1,4 @@
-from data import load_paths, load_target
+from utils import load_paths, load_target, save_as_json_file, save_as_txt_file
 import jiwer
 import whisper_timestamped
 import pandas as pd
@@ -30,6 +30,8 @@ def transcribe(audio_paths):
         audio = whisper_timestamped.load_audio(path)
         results = whisper_timestamped.transcribe(model, audio, language="fr")
         transcriptions.append(results["text"])
+        save_as_json_file(results, path)
+        save_as_txt_file(results["text"], path)
         print(f"{audio_paths.index(path) + 1} / {len(audio_paths)} finished")
 
     return transcriptions
