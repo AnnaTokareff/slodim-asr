@@ -2,7 +2,7 @@ import jiwer
 import whisperx
 import pandas as pd
 from normalizer import TextNormalizer
-from utils import load_paths, load_target, save_as_txt_file,  save_as_txt_file, convert_into_right_format_whisperX
+from utils import load_paths, load_target, save_as_txt_file,  save_as_json_file, convert_into_right_format_whisperX
 #!pip install git+https://github.com/m-bain/whisperx.git
 
 def load_model(size="base", device="cpu"):
