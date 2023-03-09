@@ -73,7 +73,7 @@ def wer_cer(data):
 def main():
     targets = load_target(text_paths)
     model = load_model(device=devices)
-    transcriptions = transcribe(model, audio_paths, prompt)
+    transcriptions = transcribe(model, audio_paths, prompt) # otherwise put: prompt=False
     data = text_normalization(targets, transcriptions)
     wer_cer(data)
 
