@@ -17,17 +17,23 @@ def load_model(device, size="small"):
     return whisper.load_model(size, device=device)
 
 
-def transcribe(model, audio_paths, prompt):
+def transcribe(model, audio_paths, prompt=True):
     """
-    Transcribe with whisper_timestamped
+    Transcribe with whisperAI
     audio_paths: list(str)
+    promt: str (True by default)
+    promt helps to make model produce fillers
     return: transcriptions( list(str) )
     """
     print("Transcribing...")
     transcriptions = []
 
     for path in audio_paths:
-        results = model.transcribe(path, initial_prompt=prompt, language="fr")
+        if prompt:
+            results = model.transcribe(path, initial_prompt=prompt, language="fr")
+        else: 
+            results = model.transcribe(path, language="fr")
+            
         transcriptions.append(results["text"])
         save_as_file(results, path)
         print(f"{audio_paths.index(path) + 1} / {len(audio_paths)} finished")
