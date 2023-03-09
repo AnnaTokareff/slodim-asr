@@ -1,6 +1,7 @@
 ## ASR system for SLODiM platform
 
 - Whisper:
+  - [with original whisper](whisper_transcribe.py)
   - [with Pyannote pipeline](whisper_pyannote.py)
   - [with whisper_timestamped](whisper_ts_norm.py)
   - [with whisperX](whisperx_norm.py)
