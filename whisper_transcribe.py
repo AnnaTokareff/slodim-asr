@@ -17,12 +17,14 @@ def load_model(device, size="small"):
     return whisper.load_model(size, device=device)
 
 
-def transcribe(model, audio_paths, prompt=True):
+def transcribe(model, audio_paths, prompt=True, word_timestamps=True):
     """
     Transcribe with whisperAI
     audio_paths: list(str)
     promt: str (True by default)
     promt helps to make model produce fillers
+    word_timestamps: boolean (True by default)
+    Extract word-level timestamps
     return: transcriptions( list(str) )
     """
     print("Transcribing...")
@@ -30,9 +32,9 @@ def transcribe(model, audio_paths, prompt=True):
 
     for path in audio_paths:
         if prompt:
-            results = model.transcribe(path, initial_prompt=prompt, language="fr")
+            results = model.transcribe(path, initial_prompt=prompt, language="fr", word_timestamps=True)
         else: 
-            results = model.transcribe(path, language="fr")
+            results = model.transcribe(path, language="fr", word_timestamps=True)
             
         transcriptions.append(results["text"])
         save_as_file(results, path)
