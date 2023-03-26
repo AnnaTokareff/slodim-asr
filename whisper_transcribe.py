@@ -17,17 +17,25 @@ def load_model(device, size="small"):
     return whisper.load_model(size, device=device)
 
 
-def transcribe(model, audio_paths, prompt):
+def transcribe(model, audio_paths, prompt=True, word_timestamps=True):
     """
-    Transcribe with whisper_timestamped
+    Transcribe with whisperAI
     audio_paths: list(str)
+    promt: str (True by default)
+    promt helps to make model produce fillers
+    word_timestamps: boolean (True by default)
+    Extract word-level timestamps
     return: transcriptions( list(str) )
     """
     print("Transcribing...")
     transcriptions = []
 
     for path in audio_paths:
-        results = model.transcribe(path, initial_prompt=prompt, language="fr")
+        if prompt:
+            results = model.transcribe(path, initial_prompt=prompt, language="fr", word_timestamps=True)
+        else: 
+            results = model.transcribe(path, language="fr", word_timestamps=True)
+            
         transcriptions.append(results["text"])
         save_as_file(results, path)
         print(f"{audio_paths.index(path) + 1} / {len(audio_paths)} finished")
@@ -67,6 +75,7 @@ def wer_cer(data):
 def main():
     targets = load_target(text_paths)
     model = load_model(device=devices)
+<<<<<<< HEAD
     transcriptions = transcribe(model, audio_paths, prompt)
     data = text_normalization(targets, transcriptions, prompt=True)
 
@@ -76,6 +85,10 @@ def main():
     with open("trans_normed.txt", "w") as f:
         f.write(normalizer(transcriptions[0]))
 
+=======
+    transcriptions = transcribe(model, audio_paths, prompt) # otherwise put: prompt=False
+    data = text_normalization(targets, transcriptions)
+>>>>>>> 2111da63c1ed4640071419fd2a3428c9d1c2ad3e
     wer_cer(data)
 
 
