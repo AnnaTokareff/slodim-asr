@@ -42,21 +42,25 @@ def remove_symbols_and_diacritics(s: str, keep=""):
 
 
 class TextNormalizer:
-    def __init__(self):
+    def __init__(self, prompt=True):
         self.clean = remove_symbols_and_diacritics
+        self.prompt = prompt
 
     def __call__(self, s: str):
         s = s.lower()
+        s = re.sub(r"\s{c\s", " ", s)  # remove stand-alone c
         s = re.sub(r"[<\[][^>\]]*[>\]]", "", s)  # remove words between brackets
         s = re.sub(r"\(([^)]+?)\)", "", s)  # remove words between parenthesis
         s = s.replace("\n", " ")  # remove new line
         s = s.replace("\xa0", "")  # remove non-breaking space
-        s = re.sub(r"mmm|euh", "", s)  # remove fillers
         s = self.clean(s).lower()
         s = re.sub(r"\s+", " ", s)  # replace one or more whitespace with only one
         s = re.sub(
             r"(\w)(\1{2,})", r"\1", s
         )  # replace prolonged words with standard spelling
-        s = re.sub(r"\b(.+)(\b\1\b)+", r"\1", s)  # remove repeated phrases
+
+        if self.prompt == False:
+            s = re.sub(r"mmm|euh", "", s)  # remove fillers
+            s = re.sub(r"\b(.+)(\b\1\b)+", r"\1", s)  # remove repeated phrases
 
         return s
