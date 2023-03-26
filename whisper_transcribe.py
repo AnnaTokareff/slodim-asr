@@ -35,14 +35,14 @@ def transcribe(model, audio_paths, prompt):
     return transcriptions
 
 
-def text_normalization(targets, transcriptions):
+def text_normalization(targets, transcriptions, prompt=True):
     """
     Normalize the text to exclude formatting factors
     targets, transcriptions: ( list(str) )
     return: data (pandas Dataframe)
     """
     print("Normalizing text...")
-    normalizer = TextNormalizer()
+    normalizer = TextNormalizer(prompt=prompt)
     data = pd.DataFrame(dict(targets=targets, transcriptions=transcriptions))
 
     data["targets_clean"] = [normalizer(text) for text in data["targets"]]
@@ -68,7 +68,14 @@ def main():
     targets = load_target(text_paths)
     model = load_model(device=devices)
     transcriptions = transcribe(model, audio_paths, prompt)
-    data = text_normalization(targets, transcriptions)
+    data = text_normalization(targets, transcriptions, prompt=True)
+
+    normalizer = TextNormalizer(prompt)
+    with open("target_normed.txt", "w") as f:
+        f.write(normalizer(targets[0]))
+    with open("trans_normed.txt", "w") as f:
+        f.write(normalizer(transcriptions[0]))
+
     wer_cer(data)
 
 
@@ -76,12 +83,13 @@ if __name__ == "__main__":
     # audio_paths, text_paths = load_paths("temp_audio", "temp_txt")
     devices = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    audio_paths = ["./audio/CAJ-077.m4a"]
-    text_paths = ["./txt/P39684 - caj-077.zip (2).txt"]
+    audio_paths = ["./audio/POT-016-Entr1-Audio.MP3", "./audio/RAF-007-Entr1-Audio.MP3"]
+    text_paths = [
+        "./txt/P40735 - pot-016-entr1-audio.zip.txt",
+        "./txt/P40736 - raf-007-entr1-audio.zip.txt",
+    ]
 
-    prompt = (
-        "mmm, c’est vrai, mmm... Ah ben euh la montagne elle est euh elle est dure."
-    )
+    prompt = "mmm, c’est vrai, mmm... Ah ben euh la montagne elle est euh elle est dure. Ouais."
 
     start_time = datetime.now()
     main()
