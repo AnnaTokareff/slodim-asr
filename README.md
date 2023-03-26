@@ -1,31 +1,32 @@
 ## ASR system for SLODiM platform
 
 - Whisper:
+
   - [with original whisper](whisper_transcribe.py)
   - [with Pyannote pipeline](whisper_pyannote.py)
   - [with whisper_timestamped](whisper_ts_norm.py)
   - [with whisperX](whisperx_norm.py)
 
 - Wav2Vec 2.0:
+
   - [with Pyannote pipeline](wav2vec_pyannote.py)
 
 - [Normalizer](normalizer.py)
+- [Data preprocessor for renaming and converting format](data_preprocessor.py)
 
-<h2 align="left" id="To do list"> To do list🗓</h2>
+## To do list🗓
 
-* [ ] Test each model on the whole dataset
+- [x] Test each model on the whole dataset
 
-* [x] Fix problem with saving aligned data for WhisperX
+- [x] Fix problem with saving aligned data for WhisperX
 
-* [ ] Train Wav2Vec on our data
+- [ ] Train Wav2Vec on our data
 
-* [ ] Test Wav2Vec and get the transcriptions
+- [ ] Test Wav2Vec and get the transcriptions
 
-* [ ] Figure out how to deal with disfluencies
+- [ ] Figure out how to deal with disfluencies
 
-* [ ] Find the ways to detect backchannels
-
-
+- [ ] Find the ways to detect backchannels
 
 ## Citations
 
