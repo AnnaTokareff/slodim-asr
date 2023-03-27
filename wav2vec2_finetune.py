@@ -2,19 +2,22 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor, Wav2Vec2CTCTokenizer, TrainingArguments, Trainer
-from datasets import load_from_disk
+from datasets import load_dataset
 from jiwer import wer, cer
 from dataset_builder import DatasetBuilder
+import librosa
 
 
 class Wav2Vec2FineTuner:
-    def __init__(self, model_name, audio_dir, output_dir, build_dataset=True, train_csv_path=None, test_csv_path=None):
+    def __init__(self, model_name, audio_dir, output_dir, build_dataset=True, 
+                            train_csv_path=None, test_csv_path=None, sampling_rate=16_000):
         self.processor = Wav2Vec2Processor.from_pretrained(model_name)
         self.model = Wav2Vec2ForCTC.from_pretrained(model_name)
         self.train_csv_path = train_csv_path
         self.test_csv_path = test_csv_path
         self.output_dir = output_dir
         self.build_dataset = build_dataset
+        self.sampling_rate = sampling_rate
         
         if self.build_dataset == True:
             self.dataset_builder = DatasetBuilder(
@@ -31,29 +34,41 @@ class Wav2Vec2FineTuner:
         '''
         prepare audio as required
         '''
-        input_values = self.processor(example["path"], sampling_rate=16_000, return_tensors="pt").input_values[0]
-        with self.processor.as_target_processor():
-            labels = self.processor(example["text"]).input_ids
+        # Load audio file
+        audio, sampling_rate = librosa.load(example["path"], sr=None)
+    
+        # Check if the audio's sampling rate matches the expected sampling rate
+        if sampling_rate != self.sampling_rate:
+            # Resample audio to match the expected sampling rate
+            audio = librosa.resample(audio, orig_sr=sampling_rate, target_sr=self.sampling_rate)
+            sampling_rate = self.sampling_rate
+
+        # Process audio data
+        input_values = self.processor(audio, sampling_rate=self.sampling_rate, return_tensors="pt").input_values[0]
+
+        # Process labels
+        labels = self.processor(text=example["text"], return_tensors="pt").input_ids
+
         return {"input_values": input_values, "labels": labels}
 
-    def _load_and_preprocess_data(self, csv_path):
+    def _load_and_preprocess_data(self, dataset):
         '''
         map segmented audio to preprocessing function
         '''
-        dataset = load_from_disk(csv_path)
         dataset = dataset.map(
             self._prepare_sample,
-            remove_columns=dataset.column_names,
-            num_proc=4,
+            num_proc=12,
         )
         return dataset
 
     def get_train_dataset(self):
-        train_dataset = self._load_and_preprocess_data(self.train_csv_path)
+        train_dataset = load_dataset('csv', data_files=self.train_csv_path)
+        train_dataset = self._load_and_preprocess_data(train_dataset)
         return train_dataset
 
     def get_test_dataset(self):
-        test_dataset = self._load_and_preprocess_data(self.test_csv_path)
+        test_dataset = load_dataset('csv', data_files=self.test_csv_path)
+        test_dataset = self._load_and_preprocess_data(test_dataset)
         return test_dataset
 
     def _compute_metrics(self, pred):
