@@ -66,15 +66,15 @@ def perform_speaker_diarization(input_dir, output_dir, model_name):
 
 
 def main():
-   input_dir = "/content/audios"
-   output_dir = "/content/processed_audios"
+   input_dir = "PATH TO ALL THE AUDIOS IN m4a FORMAT"
+   output_dir = "PATH FOR SAVING PROCESSED AUDIOS IN wav FORMAT"
    model_name = "dia_ami"
 
     # preprocess the audio files
    preprocess_audio(input_dir, output_dir)
 
    # perform speaker diarization on the preprocessed audio files
-   # perform_speaker_diarization(temp_dir, output_dir, model_name)
+   perform_speaker_diarization(temp_dir, output_dir, model_name) # COMMENT THIS LINE IF YOU DON'T WANT SPEAKER DIARIZATION
 
 
 
