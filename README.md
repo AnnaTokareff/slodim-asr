@@ -10,7 +10,7 @@
 
   - [Fine-tuning](wav2vec2_finetune.py)
 
-- Data pre-processing & post-processing
+- Data processing & helper functions:
 
   - [Data preprocessor](data_preprocessor.py)
     - Rename EAF files and audio files
@@ -19,6 +19,7 @@
     - Slice audio into segments according to annotations
     - Pair segment filename and transcriptions into CSV files
   - [Audio pre-treatment](audio_pre-treatment.py)
+  - [Helper functions for Whisper](utils.py)
   - [Text normalizer](normalizer.py)
 
 - Archived:
