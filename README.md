@@ -64,6 +64,8 @@ if __name__ == "__main__":
     fine_tuner = Wav2Vec2FineTuner(model_name, audio_dir, output_dir, build_dataset=True)
 ```
 
+The number of processes (`num_proc` in `_load_and_preprocess_data()`) is now set to 12. You might need to adjust the number according to the server you are using.
+
 ## To do list🗓
 
 - [x] Test each model on the whole dataset
