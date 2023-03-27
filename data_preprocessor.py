@@ -65,6 +65,7 @@ class DataPreprocessor:
         '''
         convert audio to wav and rename as 'ABC-001-1.wav'
         '''
+        os.makedirs(self.wav_dir, exist_ok=True)
         new_name, ext = self._get_audio_new_name_and_ext(filename)
         if new_name and ext:
             input_path = os.path.join(self.m4a_dir, filename)
