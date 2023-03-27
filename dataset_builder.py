@@ -34,7 +34,7 @@ class DatasetBuilder:
         '''
         write dataset into csv file
         '''
-        df = pd.DataFrame(data, columns=["path", "transcription"])
+        df = pd.DataFrame(data, columns=["path", "text"])
         df.to_csv(file_path, index=False)
 
     def parse_eaf_file(self, eaf_path: str) -> List[Tuple[int, int, str]]:
@@ -80,10 +80,8 @@ class DatasetBuilder:
 
                 # write dataset into a list of dictionaries
                 for start_time, end_time, text in annotations:
-                    start_time_ms = int(start_time * 1000)
-                    end_time_ms = int(end_time * 1000)
-                    seg_path = os.path.join(seg_folder, f"{start_time_ms}-{end_time_ms}.wav")
-                    self.slice_and_save_audio(wav_path, seg_path, start_time_ms, end_time_ms)
+                    seg_path = os.path.join(seg_folder, f"{start_time}-{end_time}.wav")
+                    self.slice_and_save_audio(wav_path, seg_path, start_time, end_time)
                     data.append({"path": seg_path, "text": text})
             else:
                 print(f"Warning: Audio file '{wav_filename}' not found.")
