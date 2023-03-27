@@ -13,6 +13,7 @@
 
 - [Normalizer](normalizer.py)
 - [Data preprocessor for renaming and converting format](data_preprocessor.py)
+- [Program for audio pre-treatment](audio_pre-treatment.py)
 
 ## To do list🗓
 
