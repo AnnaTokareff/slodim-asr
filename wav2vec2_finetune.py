@@ -111,7 +111,8 @@ if __name__ == "__main__":
     
     # Instantiate and run Wav2Vec2FineTuner
     model_name = "jonatasgrosman/wav2vec2-large-xlsr-53-french"
-    fine_tuner = Wav2Vec2FineTuner(model_name, audio_dir, output_dir, build_dataset=True)
+    fine_tuner = Wav2Vec2FineTuner(model_name, audio_dir, output_dir, build_dataset=False, 
+                                   train_csv_path=train_csv_path, test_csv_path=test_csv_path)
     fine_tuner.fine_tune()
 
     # Save the finetuned model
