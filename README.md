@@ -59,7 +59,7 @@ Notice that if you have never run dataset_builder before, you need to change ins
 
 ```python
 if __name__ == "__main__":
-	...
+    ...
     fine_tuner = Wav2Vec2FineTuner(model_name, audio_dir, output_dir, build_dataset=True)
 ```
 
