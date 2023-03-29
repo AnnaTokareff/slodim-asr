@@ -32,6 +32,8 @@ def load_model(device, size="small"):
     return model.to(device), processor
 
 
+import librosa
+
 def transcribe(model, audio_paths, processor, prompt, word_timestamps):
     device = next(model.parameters()).device
     transcriptions = []
@@ -79,6 +81,7 @@ def wer_cer(data):
 
 
 def main():
+    # audio_paths, text_paths = load_paths("temp_audio", "temp_txt")
     audio_paths = ["/content/BOC-066 (1).wav"]
     text_paths = ["/content/P40727 - bls-056-entr1-audio.zip.txt"]
     #audio_paths, text_paths = load_paths("", "")
@@ -99,9 +102,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # audio_paths, text_paths = load_paths("temp_audio", "temp_txt")
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    prompt = "mmm, c’est vrai, mmm... Ah ben euh la montagne elle est euh elle est dure. Ouais."
     start_time = datetime.now()
     main()
     end_time = datetime.now()
