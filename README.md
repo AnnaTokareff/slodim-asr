@@ -18,6 +18,7 @@
   - [Dataset builder](dataset_builder.py)
     - Slice audio into segments according to annotations
     - Pair segment filename and transcriptions into CSV files
+  - [Waveform extraction](waveform_extraction.py)
   - [Audio pre-treatment](audio_pre-treatment.py)
   - [Helper functions for Whisper](utils.py)
   - [Text normalizer](normalizer.py)
@@ -48,7 +49,10 @@ The code will create the following folders (if not existing) and output result i
 
 - WAV audio: `./audio/wav`
 - Segmented WAV audio: `./audio/seg`, with individual folders corresponding to each original audio
-- CSV file: `./output`, with full dataset as `data.csv`, training set as `train.csv`, and test set (10%) as `test.csv`
+  - Audio with 0 length are removed
+  - Resampled to 16000 Hz
+- JSON file: `./dataset`, with training set as `train.json`, and test set (10%) as `test.json`
+  - Keys: `path`, `transcription`, and `waveform`
 
 ### Fine-tuning Wav2Vec 2.0:
 
