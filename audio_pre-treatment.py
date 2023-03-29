@@ -47,7 +47,7 @@ def perform_speaker_diarization(input_dir, output_dir):
         os.makedirs(output_dir)
 
     # create inference object with the pre-trained speaker diarization model
-    inference =  Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
+    inference =  Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="PUT HERE YOUR ACCESS TOKEN")
 
     for filename in os.listdir(input_dir):
         if filename.endswith(".wav") or filename.endswith(".m4a"):
