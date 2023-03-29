@@ -5,15 +5,19 @@ from typing import List, Tuple
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from pympi import Elan
+import librosa
+import soundfile as sf
+import json
 
 
 class DatasetBuilder:
-    def __init__(self, eaf_dir, wav_dir, seg_dir, output_dir, test_size=0.1):
+    def __init__(self, eaf_dir, wav_dir, seg_dir, output_dir, split=True, test_size=0.1):
         self.eaf_dir = eaf_dir
         self.wav_dir = wav_dir
         self.seg_dir = seg_dir
         self.output_dir = output_dir
         self.test_size = test_size
+        self.split = split
 
     def _parse_root_id_and_session(self, filename: str) -> Tuple[str, str]:
         '''
@@ -30,12 +34,12 @@ class DatasetBuilder:
             print(f"Warning: {filename} root id and session not found")
             return None, None
 
-    def _write_csv(self, data, file_path):
+    def _write_json(self, data, file_path):
         '''
         write dataset into csv file
         '''
-        df = pd.DataFrame(data, columns=["path", "text"])
-        df.to_csv(file_path, index=False)
+        with open(file_path, "w") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
     def parse_eaf_file(self, eaf_path: str) -> List[Tuple[int, int, str]]:
         '''
@@ -50,14 +54,35 @@ class DatasetBuilder:
                 annotations.append((start_time, end_time, text))
 
         return annotations
-
-    def slice_and_save_audio(self, wav_path: str, seg_path: str, start_time: int, end_time: int):
+    
+    def slice_and_process_audio(self, wav_path: str, seg_path: str, start_time: int, end_time: int):
         '''
         slice audio segments according to annotations
         '''
+        target_sampling_rate = 16000
+
         audio = AudioSegment.from_wav(wav_path)
         segment = audio[start_time:end_time]
         segment.export(seg_path, format="wav")
+        audio_data, sampling_rate = librosa.load(seg_path, sr=None)
+        
+        # Check if the input signal length is 0
+        if len(audio_data) == 0:
+            print(f"Deleting {seg_path} due to zero-length input signal")
+            os.remove(seg_path)
+            return None
+
+        # Resample audio to the target sampling rate
+        if sampling_rate != target_sampling_rate:
+            audio_data = librosa.resample(audio_data, orig_sr=sampling_rate, 
+                                          target_sr=target_sampling_rate)
+
+        # Save resampled audio to the original file
+        sf.write(seg_path, audio_data, target_sampling_rate, format='wav')
+
+        # Convert NumPy array to list
+        audio_data_list = audio_data.tolist()
+        return audio_data_list
 
     def build_dataset(self):
         '''
@@ -81,8 +106,15 @@ class DatasetBuilder:
                 # write dataset into a list of dictionaries
                 for start_time, end_time, text in annotations:
                     seg_path = os.path.join(seg_folder, f"{start_time}-{end_time}.wav")
-                    self.slice_and_save_audio(wav_path, seg_path, start_time, end_time)
-                    data.append({"path": seg_path, "text": text})
+                    waveform = self.slice_and_process_audio(wav_path, seg_path, start_time, end_time)
+                    data.append({
+                        "path": seg_path, 
+                        "transcription": text, 
+                        "waveform": waveform, 
+                        "sampling_rate": 16000, 
+                        "duration": end_time - start_time, 
+                        "conversation_id": root_id
+                        })
             else:
                 print(f"Warning: Audio file '{wav_filename}' not found.")
             
@@ -97,16 +129,15 @@ class DatasetBuilder:
             return None, None
         
         train_data, test_data = train_test_split(data, test_size=self.test_size, random_state=42)
-        self._write_csv(data, os.path.join(self.output_dir, "data.csv"))
-        self._write_csv(train_data, os.path.join(self.output_dir, "train.csv"))
-        self._write_csv(test_data, os.path.join(self.output_dir, "test.csv"))
+        self._write_json(train_data, os.path.join(self.output_dir, "train.json"))
+        self._write_json(test_data, os.path.join(self.output_dir, "test.json"))
         print(f"Dataset has been written into {self.output_dir}")
 
 if __name__ == "__main__":
     eaf_dir = "./eaf"
     wav_dir = "./audio/wav"
     seg_dir = "./audio/seg"
-    output_dir = "./output"
+    output_dir = "./dataset"
 
     # Instantiate the DatasetBuilder class
     dataset_builder = DatasetBuilder(eaf_dir, wav_dir, seg_dir, output_dir)
