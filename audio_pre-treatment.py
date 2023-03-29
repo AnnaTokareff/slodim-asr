@@ -72,7 +72,7 @@ def main():
 
     # preprocess the audio files
    wav_dir = os.path.join(output_dir, "wav_format")
-   #preprocess_audio(input_dir, wav_dir)
+   preprocess_audio(input_dir, wav_dir)
 
    # perform speaker diarization on the preprocessed audio files
    diarization_dir = os.path.join(output_dir, "diarization")
