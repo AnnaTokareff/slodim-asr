@@ -32,8 +32,6 @@ def load_model(device, size="small"):
     return model.to(device), processor
 
 
-import librosa
-
 def transcribe(model, audio_paths, processor, prompt, word_timestamps):
     device = next(model.parameters()).device
     transcriptions = []
