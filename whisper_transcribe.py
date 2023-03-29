@@ -88,7 +88,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # audio_paths, text_paths = load_paths("temp_audio", "temp_txt")
     devices = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     audio_paths = ["./audio/POT-016-Entr1-Audio.MP3", "./audio/RAF-007-Entr1-Audio.MP3"]
