@@ -20,6 +20,10 @@
     - Pair segment filename and transcriptions into CSV files
   - [Waveform extraction](waveform_extraction.py)
   - [Audio pre-treatment](audio_pre-treatment.py)
+    - Convert audio into Wav format
+    - Change the parameters suitable for Whisper/Wav2Vec
+    - Deletes noise and long pauses
+    - Diarizes speakers
   - [Helper functions for Whisper](utils.py)
   - [Text normalizer](normalizer.py)
 
