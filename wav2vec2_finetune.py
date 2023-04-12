@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor, TrainingArguments, Trainer
 from torch.utils.data import Dataset
-from jiwer import wer, cer
+import jiwer
 import json
 
 torch.cuda.empty_cache()
@@ -35,13 +35,14 @@ class CustomWav2Vec2Dataset(Dataset):
 
 
 class Wav2Vec2FineTuner:
-    def __init__(self, model_name, output_dir, train_path, test_path, sampling_rate=16000):
+    def __init__(self, model_name, output_dir, train_path, test_path, sampling_rate=16000, last_checkpoint=None):
         self.processor = Wav2Vec2Processor.from_pretrained(model_name)
         self.model = Wav2Vec2ForCTC.from_pretrained(model_name)
         self.output_dir = output_dir
         self.sampling_rate = sampling_rate
         self.train_path = train_path
         self.test_path = test_path
+        self.last_checkpoint = last_checkpoint
 
     def get_train_dataset(self):
         with open(self.train_path, "r") as f:
@@ -61,8 +62,8 @@ class Wav2Vec2FineTuner:
         pred.label_ids[pred.label_ids == -100] = self.processor.tokenizer.pad_token_id
         pred_str = self.processor.batch_decode(pred_ids)
         label_str = self.processor.batch_decode(pred.label_ids, group_tokens=False)
-        wer = wer(label_str, pred_str)
-        cer = cer(label_str, pred_str)
+        wer = jiwer.wer(label_str, pred_str)
+        cer = jiwer.cer(label_str, pred_str)
         return {"wer": wer, "cer": cer}
     
     def data_collator(self, samples):
@@ -79,12 +80,14 @@ class Wav2Vec2FineTuner:
         test_dataset = self.get_test_dataset()
         print("Dataset loaded for training")
 
+        last_checkpoint = self.last_checkpoint
+
         training_args = TrainingArguments(
             output_dir='./output/wav2vec2_results',
             num_train_epochs=30,
-            per_device_train_batch_size=4,
-            per_device_eval_batch_size=4,
-            gradient_accumulation_steps=2,
+            per_device_train_batch_size=1,
+            per_device_eval_batch_size=1,
+            gradient_accumulation_steps=8,
             save_steps=500,
             save_total_limit=5,
             evaluation_strategy="epoch",
@@ -103,7 +106,7 @@ class Wav2Vec2FineTuner:
             compute_metrics=self._compute_metrics,
         )
 
-        trainer.train()
+        trainer.train(resume_from_checkpoint=last_checkpoint)
 
     def save_model(self):
         self.model.save_pretrained(self.output_dir)
@@ -116,10 +119,13 @@ if __name__ == "__main__":
     output_dir = "./output"
     train_path = os.path.join(output_dir, "train.json")
     test_path = os.path.join(output_dir, "test.json")
+    last_checkpoint = "./output/wav2vec2_results/checkpoint-500"
     
     # Instantiate and run Wav2Vec2FineTuner
     model_name = "jonatasgrosman/wav2vec2-large-xlsr-53-french"
-    fine_tuner = Wav2Vec2FineTuner(model_name, output_dir, train_path, test_path, sampling_rate=16000)
+    fine_tuner = Wav2Vec2FineTuner(model_name, output_dir, train_path, 
+                                   test_path, sampling_rate=16000,
+                                   last_checkpoint=last_checkpoint)
     fine_tuner.fine_tune()
 
     # Save the finetuned model
