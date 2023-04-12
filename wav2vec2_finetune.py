@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from jiwer import wer, cer
 import json
 
+torch.cuda.empty_cache()
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb=128'
 
@@ -24,8 +25,8 @@ class CustomWav2Vec2Dataset(Dataset):
             return None
 
         waveform = audio["waveform"]
-        input_values = self.processor(waveform, sampling_rate=self.sampling_rate, return_tensors="pt").input_values.squeeze(0)
-        labels = self.processor.tokenizer(audio["transcription"], return_tensors="pt").input_ids.squeeze(0)
+        input_values = self.processor(waveform, sampling_rate=self.sampling_rate, return_tensors="pt").input_values[0]
+        labels = self.processor.tokenizer(audio["transcription"], return_tensors="pt").input_ids[0]
 
         return {"input_values": input_values, "labels": labels}
 
