@@ -1,7 +1,4 @@
 import os
-import shutil
-import torch
-import pyannote.audio
 from pydub import AudioSegment
 from pyannote.audio import Pipeline
 from pydub.silence import split_on_silence
