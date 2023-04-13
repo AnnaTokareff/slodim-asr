@@ -52,47 +52,42 @@ def process_audio_file(audio_file_path, model_path, output_dir, max_split_size_m
     sf.write(source2_path, est_sources[1], sample_rate)
     pbar.close()
 
-
 def improve_audio_quality(output_dir, aggressiveness=2):
-    # Voice activity detection
+    # voice activity detection
     vad = webrtcvad.Vad()
     vad.set_mode(aggressiveness)
 
-    # Loop over audio files in the output directory
     for file_name in os.listdir(output_dir):
         if not file_name.endswith(".wav"):
             continue
 
         source_path = os.path.join(output_dir, file_name)
-
-        # Load audio data and resample to 16kHz
+        # Resample audio to 16kHz
         audio_data, sample_rate = sf.read(source_path)
         if sample_rate != 16000:
-            audio_data = sf.resample(audio_data, sample_rate, 16000)
-            sample_rate = 16000
+          audio_data = sf.resample(audio_data, sample_rate, 16000)
 
-        # Split audio into 30ms chunks
+        # Split audio into fixed-length chunks
         chunk_duration_ms = 30
         chunk_size = int(chunk_duration_ms * sample_rate / 1000)
-        chunks = [audio_data[i:i+chunk_size] for i in range(0, len(audio_data), chunk_size)]
+        num_chunks = int(np.ceil(len(audio_data) / chunk_size))
+        padded_audio_data = np.zeros(num_chunks * chunk_size)
+        padded_audio_data[:len(audio_data)] = audio_data
+        chunks = np.split(padded_audio_data, num_chunks)
 
         # Detect voice activity in each chunk and keep only the active chunks
         active_chunks = []
         for chunk in chunks:
-          is_speech = vad.is_speech(chunk.tobytes(), sample_rate)
-          if is_speech:
-            active_chunks.append(chunk)
+            is_speech = vad.is_speech(chunk.tobytes(), sample_rate, length=len(chunk))
+            if is_speech:
+                active_chunks.append(chunk)
         active_audio = np.concatenate(active_chunks)
-
-        # Write processed audio to file
-        output_path = os.path.join(output_dir, f"{file_name[:-4]}_processed.wav")
-        sf.write(output_path, active_audio, sample_rate)
 
 
 def main():
   model_path = "mpariente/DPRNNTasNet-ks2_WHAM_sepclean"
   audio_file_path = "/content/BLS-056-Entr1-Audio_cut.wav"
-  output_dir = "/content/res" 
+  output_dir = "/content/sample_data/audios_res" 
   process_audio_file(audio_file_path, model_path, output_dir)
   improve_audio_quality(output_dir)
 
