@@ -29,6 +29,7 @@
     - [Payannote](payannote_overlap_speech_sep.py)
   - [Helper functions for Whisper](utils.py)
   - [Text normalizer](normalizer.py)
+  - [Building n-gram Language Model with KenLM](5gram_lm_kenlm.py)
 
 - Archived:
   - [Whisper with Pyannote pipeline](archived/whisper_pyannote.py)
@@ -38,7 +39,7 @@
 
 ## Usage
 
-### Preprocessing data and building dataset:
+### Preprocessing data and building dataset
 
 ```python
 python3 data_preprocessor.py
@@ -61,7 +62,7 @@ The code will create the following folders (if not existing) and output result i
 - JSON file: `./dataset`, with training set as `train.json`, and test set (10%) as `test.json`
   - Keys: `path`, `transcription`, and `waveform`
 
-### Fine-tuning Wav2Vec 2.0:
+### Fine-tuning Wav2Vec 2.0
 
 ```python
 python3 wav2vec2_finetune.py
@@ -83,9 +84,9 @@ The number of processes (`num_proc` in `_load_and_preprocess_data()`) is now set
 
 - [x] Fix problem with saving aligned data for WhisperX
 
-- [ ] Finetune Wav2Vec on our data (in progress)
+- [x] Finetune Wav2Vec on our data
 
-- [ ] Test Wav2Vec and get the transcriptions
+- [x] Test Wav2Vec and get the transcriptions
 
 - [ ] Figure out how to deal with disfluencies (in progress)
 
