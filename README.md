@@ -24,7 +24,7 @@
     - Change the parameters suitable for Whisper/Wav2Vec
     - Deletes noise and long pauses
     - Diarizes speakers
-  - Speaker separation tools
+  - Speaker separation tools:
     - [Asteroid](diarize_asteroid.py)
     - [Payannote](payannote_overlap_speech_sep.py)
   - [Helper functions for Whisper](utils.py)
