@@ -30,14 +30,14 @@ def preprocess_and_improve_audio(input_dir, output_dir):
     vad.set_mode(2)  # Set VAD aggressiveness level (2 for most aggressive)
 
     for filename in os.listdir(input_dir):
-        if filename.endswith(".m4a") or filename.endswith(".mp3"):
+        if filename.endswith(".m4a") or filename.endswith(".MP3"):
             input_path = os.path.join(input_dir, filename)
             output_path = os.path.join(output_dir, os.path.splitext(filename)[0] + ".wav")
 
             if filename.endswith(".m4a"):
                 sound = AudioSegment.from_file(input_path, format="m4a")
-            elif filename.endswith(".mp3"):
-                sound = AudioSegment.from_file(input_path, format="mp3")
+            elif filename.endswith(".MP3"):
+                sound = AudioSegment.from_file(input_path, format="MP3")
 
             sound = sound.set_channels(1).set_frame_rate(16000)
 
@@ -81,6 +81,7 @@ def preprocess_and_improve_audio(input_dir, output_dir):
             # Save the improved audio as a WAV file
             improved_path = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}.wav")
             sf.write(improved_path, active_audio, sample_rate)
+
 
 def main():
     input_dir = '/home/atokareva/slodim/corpus/audio'
