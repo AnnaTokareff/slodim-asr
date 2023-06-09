@@ -6,35 +6,40 @@ class Renamer:
         self.eaf_dir = eaf_dir
         self.wav_dir = wav_dir
 
-    def _get_eaf_new_name(self, filename):
-        '''
-        Return formatted filename of eaf file by retrieving root id and session number.
-        '''
-        pattern = r"([a-zA-Z]+-\d+)(?:-Entr(\d)|\s*Eye\s*Tracker)?(?:-Audio)?\.eaf"
-        match = re.match(pattern, filename, re.IGNORECASE)
 
+    def _get_eaf_new_name(self, filename):
+        pattern = r"P\d+\s*-\s*([a-z]+)-(\d+).*\.eaf"
+        match = re.match(pattern, filename, re.IGNORECASE)
         if match:
-            root_id = match.group(1).upper()
-            session = match.group(2) if match.group(2) else "1"
-            return f"{root_id}-{session}.eaf"
+            prefix = match.group(1).upper()
+            number = match.group(2)
+            transformed_filename = f"{prefix}-{number}.eaf"
+            return transformed_filename
         else:
-            print(f"{filename} no match")
             return None
+
 
     def _get_audio_new_name(self, filename):
         '''
-        Return new filename based on root id and session number for audio file.
+        Return new filename based on root ID and session number, and extension.
         '''
-        pattern = r"([a-zA-Z]+-\d+)(?:-Entr(\d)|\s*Eye\s*Tracker)?(?:-Audio)?\.([a-zA-Z0-9]+)"
+        pattern = r"P(\d+)\s*-\s*([a-zA-Z]+-\d+)(?:\s*-\s*(?:entr(\d)|eye\stracker))?(?:-audio)?\.([a-zA-Z0-9]+)"
         match = re.match(pattern, filename, re.IGNORECASE)
 
         if match:
-            root_id = match.group(1).upper()
-            session = match.group(2) if match.group(2) else "1"
-            return f"{root_id}-{session}.wav"
+            root_id = match.group(2).upper()
+            ext = match.group(4).lower()
+            # Find the session number
+            if match.group(3):
+                session = match.group(3)
+            elif "eye tracker" in filename.lower():
+                session = "2"
+            else:
+                session = "1"
+            return f"{root_id}-{session}.wav", ext
         else:
             print(f"{filename} no match")
-            return None
+            return None, None
 
     def rename_eaf(self, filename):
         '''
@@ -48,8 +53,8 @@ class Renamer:
         '''
         Rename audio file to format 'ABC-001-1.wav'.
         '''
-        new_name = self._get_audio_new_name(filename)
-        if new_name:
+        new_name, ext = self._get_audio_new_name(filename)
+        if new_name and ext:
             os.rename(os.path.join(self.wav_dir, filename), os.path.join(self.wav_dir, new_name))
 
     def rename_files(self):
