@@ -8,7 +8,6 @@ def batch_convert_eaf_to_txt(eaf_folder_path, txt_folder_path):
     eaf_folder_path: str, path to the folder containing EAF files
     txt_folder_path: str, path to the folder to save the converted TXT files
     """
-    # Create the output folder if it doesn't exist
     os.makedirs(txt_folder_path, exist_ok=True)
 
     # Get a list of all EAF files in the folder
