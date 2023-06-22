@@ -1,70 +1,56 @@
-import torch
-import whisper
+import json
+import logging
+import os
+import re
 import jiwer
 import pandas as pd
+from statistics import median
+
+import torch
+from pyannote.audio import Audio, Pipeline
+from pyannote.core import Segment
+from tqdm import tqdm
+from pathlib import Path
 from normalizer import TextNormalizer
-from datetime import datetime
+
+import whisper
 from utils import load_paths, load_target, save_as_file
-from typing import List, Dict, Any
-from whisperx import load_align_model, align
-from whisperx.diarize import DiarizationPipeline, assign_word_speakers
+import whisper.utils as wutils
+from pydub import AudioSegment
+
 
 
 def load_model(device, size="small"):
     """
-    Load the multilingual model according to the size.
-
-    Args:
-        device: The device to use for inference (e.g., "cpu" or "cuda").
-        size: The size of the model ("small" by default).
-
-    Returns:
-        The loaded model object.
+    Load multilingual model according to the size
+    size: str
+    return: model object
     """
     print("Loading model...")
-    return whisper.load_model(size, device=device)
+
+    return whisper.load_model(size)
 
 
-def transcribe(model, audio_paths, prompt=True, word_timestamps=True):
-    """
-    Transcribe audio files using the whisperAI model.
+def join_text_fields(json_file, output_file):
+    """ take the json file and merges all the
+    diarized segments of speech into one txt file"""
+    
+    with open(json_file, "r") as file:
+        data = json.load(file)
 
-    Args:
-        model: The loaded whisperAI model.
-        audio_paths: A list of paths to the audio files to transcribe.
-        prompt: Whether to use a prompt for transcription (True by default).
-        word_timestamps: Whether to extract word-level timestamps (True by default).
+    text = " ".join([segment["text"] for segment in data])
+    print(text)
 
-    Returns:
-        A list of transcriptions for each audio file.
-    """
-    print("Transcribing...")
-    transcriptions = []
-
-    for path in audio_paths:
-        if prompt:
-            results = model.transcribe(path, initial_prompt=prompt, language="fr", word_timestamps=True)
-        else: 
-            results = model.transcribe(path, language="fr", word_timestamps=True)
-            
-        transcriptions.append(results["text"])
-        save_as_file(results, path)
-        print(f"{audio_paths.index(path) + 1} / {len(audio_paths)} finished")
-
-    return transcriptions
+    with open(output_file, "w") as file:
+        print("TXT file saved!")
+        file.write(text)
 
 
 def text_normalization(targets, transcriptions, prompt=True):
     """
-    Normalize the text to exclude formatting factors.
-
-    Args:
-        targets: A list of target texts.
-        transcriptions: A list of transcriptions.
-        prompt: Whether to include the prompt in normalization (True by default).
-
-    Returns:
-        A pandas DataFrame with the normalized texts.
+    Normalize the text to exclude formatting factors
+    targets, transcriptions: ( list(str) )
+    return: data (pandas DataFrame)
     """
     print("Normalizing text...")
     normalizer = TextNormalizer(prompt=prompt)
@@ -79,151 +65,94 @@ def text_normalization(targets, transcriptions, prompt=True):
 
 def wer_cer(data):
     """
-    Calculate WER & CER.
-
-    Args:
-        data: A pandas DataFrame with the normalized texts.
-
-    Returns:
-        The calculated WER and CER.
+    Calculate WER & CER
+    data: pandas DataFrame
+    return: wer, cer (float)
     """
     wer = jiwer.wer(list(data["targets_clean"]), list(data["transcriptions_clean"]))
     cer = jiwer.cer(list(data["targets_clean"]), list(data["transcriptions_clean"]))
-    print(f"Final WER: {wer * 100:.2f} %, CER: {cer * 100:.2f} %")
+    print(f"Final WER: {wer * 100:.2f}%, CER: {cer * 100:.2f}%")
     return wer, cer
 
 
-def diarize(audio_file: str, hf_token: str) -> Dict[str, Any]:
+def pyannote_diarize(audio_file, hf_token, num_speakers=2):
     """
-    Perform speaker diarization on an audio file.
-
-    Args:
-        audio_file: Path to the audio file to diarize.
-        hf_token: Authentication token for accessing the Hugging Face API.
-
+    Run the diarization and split the audio into segments
     Returns:
-        A dictionary representing the diarized audio file, including the speaker embeddings and the number of speakers.
+    segments: list - list of diarized segments with start, end, and speaker information
     """
-    diarization_pipeline = DiarizationPipeline(use_auth_token=hf_token)
-    diarization_result = diarization_pipeline(audio_file)
-    return diarization_result
+
+    pipeline = Pipeline.from_pretrained(
+        "pyannote/speaker-diarization@2.1", use_auth_token=hf_token)
+
+    print("Processing audio...")
+    audio = Audio(sample_rate=16000, mono=True)
+    diarization = pipeline(audio_file, num_speakers=num_speakers)
+
+    segments = []
+    for turn, _, speaker in diarization.itertracks(yield_label=True):
+        segment = {"start": turn.start, "end": turn.end, "speaker": speaker}
+        segments.append(segment)
+
+    return segments
 
 
-def assign_speakers(
-    diarization_result: Dict[str, Any], aligned_segments: Dict[str, Any]
-) -> List[Dict[str, Any]]:
+def transcribe_segments(audio_file, output_dir, segments, model):
     """
-    Assign speakers to each transcript segment based on the speaker diarization result.
-
-    Args:
-        diarization_result: Dictionary representing the diarized audio file, including the speaker embeddings and the number of speakers.
-        aligned_segments: Dictionary representing the aligned transcript segments.
-
+    Transcribe audio segments using the Whisper model
     Returns:
-        A list of dictionaries representing each segment of the transcript, including the start and end times, the
-        spoken text, and the speaker ID.
+    result: dict - transcription results with text and segments information
     """
-    result_segments, word_seg = assign_word_speakers(
-        diarization_result, aligned_segments["segments"]
-    )
-    results_segments_w_speakers: List[Dict[str, Any]] = []
-    for result_segment in result_segments:
-        results_segments_w_speakers.append(
-            {
-                "start": result_segment["start"],
-                "end": result_segment["end"],
-                "text": result_segment["text"],
-                "speaker": result_segment["speaker"],
-            }
-        )
-    return results_segments_w_speakers
 
+    model = load_model(model)
+    audio = Audio(sample_rate=16000, mono=True)
 
-def align_segments(
-    segments: List[Dict[str, Any]],
-    language_code: str,
-    audio_file: str,
-    device: str = "cpu",
-) -> Dict[str, Any]:
-    """
-    Align the transcript segments using a pretrained alignment model.
+    print("Transcribing file with Whisper...")
+    result = {"text": "", "segments": []}
+    transcriptions = []
 
-    Args:
-        segments: List of transcript segments to align.
-        language_code: Language code of the audio file.
-        audio_file: Path to the audio file containing the audio data.
-        device: The device to use for inference (e.g., "cpu" or "cuda").
+    for segment in tqdm(segments):
+        waveform, sr = audio.crop(
+            audio_file, Segment(segment["start"], segment["end"]))
+        
+        
+        transcr = model.transcribe(waveform.squeeze().numpy(), verbose=None, language='fr')
+        transcriptions.append({
+        "text": transcr["text"],
+        "start": segment["start"],
+        "end": segment["end"],
+        "speaker": segment["speaker"] })
+        
+    print(f"transcribed {len(transcriptions)}/{len(segment)}")
+    
+    diarization_file = Path(output_dir) / f"{Path(audio_file).stem}-diarized.json"
+    with open(diarization_file, "w") as f:
+            json.dump(transcriptions, f, indent=4)
 
-    Returns:
-        A dictionary representing the aligned transcript segments.
-    """
-    model_a, metadata = load_align_model(language_code=language_code, device=device)
-    result_aligned = align(segments, model_a, metadata, audio_file, device)
-    return result_aligned
+    return transcriptions
 
-
-def transcribe_and_diarize(
-    audio_file: str,
-    hf_token: str,
-    model_name: str,
-    device: str = "cpu",
-) -> List[Dict[str, Any]]:
-    """
-    Transcribe an audio file and perform speaker diarization to determine which words were spoken by each speaker.
-
-    Args:
-        audio_file: Path to the audio file to transcribe and diarize.
-        hf_token: Authentication token for accessing the Hugging Face API.
-        model_name: Name of the model to use for transcription.
-        device: The device to use for inference (e.g., "cpu" or "cuda").
-
-    Returns:
-        A list of dictionaries representing each segment of the transcript, including the start and end times, the
-        spoken text, and the speaker ID.
-    """
-    transcript = transcribe(audio_file, model_name, device)
-    aligned_segments = align_segments(
-        transcript["segments"], transcript["language_code"], audio_file, device
-    )
-    diarization_result = diarize(audio_file, hf_token)
-    results_segments_w_speakers = assign_speakers(diarization_result, aligned_segments)
-
-    # Print the results in a user-friendly way
-    for i, segment in enumerate(results_segments_w_speakers):
-        print(f"Segment {i + 1}:")
-        print(f"Start time: {segment['start']:.2f}")
-        print(f"End time: {segment['end']:.2f}")
-        print(f"Speaker: {segment['speaker']}")
-        print(f"Transcript: {segment['text']}")
-        print("")
-
-    return results_segments_w_speakers
-
-
+            
 def main():
-    audio_paths = "path/audio"
-    text_paths = "path/transcr"
-    hf_token "YOUR HF token here"
-    targets = load_target(text_paths)
-    model = load_model(device=devices)
-    transcriptions = transcribe(model, audio_paths, prompt)
-    data = text_normalization(targets, transcriptions, prompt=True)
-
-    normalizer = TextNormalizer(prompt)
-    with open("target_normed.txt", "w") as f:
-        f.write(normalizer(targets[0]))
-    with open("trans_normed.txt", "w") as f:
-        f.write(normalizer(transcriptions[0]))
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    audio_file = "path to audio file"
+    output_dir = "path to output folder"
+    json_file = "path to json file"
+    num_speakers = 2  
+    hf_token = "TOKEN" 
+    model = "large"
+    trs = "path to whisper transcriptions"
+    golds = "path to golden transcriptions"
+    segments = pyannote_diarize(audio_file, hf_token, num_speakers=2)
+    transcribe_segments(audio_file, output_dir, segments, model)
+    
+    targets = load_target(golds)
+    transcriptions = load_target(trs)
+    
+    data = text_normalization(targets, transcriptions)
     wer_cer(data)
+    
 
-
+    
 if __name__ == "__main__":
-    devices = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    prompt = "mmm, c’est vrai, mmm... Ah ben euh la montagne elle est euh elle est dure. Ouais."
-
-    start_time = datetime.now()
     main()
-    end_time = datetime.now()
-    print(f"Duration: {end_time - start_time} for {len(audio_paths)} files")
+
