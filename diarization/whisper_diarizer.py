@@ -107,14 +107,13 @@ def transcribe_segments(audio_file, output_dir, segments, model):
     model = load_model(model)
     audio = Audio(sample_rate=16000, mono=True)
 
-    print("Transcribing file with Whisper...")
-    result = {"text": "", "segments": []}
+    print("Transcribing audios with Whisper...")
+
     transcriptions = []
 
     for segment in tqdm(segments):
         waveform, sr = audio.crop(
             audio_file, Segment(segment["start"], segment["end"]))
-        
         
         transcr = model.transcribe(waveform.squeeze().numpy(), verbose=None, language='fr')
         transcriptions.append({
