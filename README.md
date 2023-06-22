@@ -4,32 +4,33 @@
 
 - Whisper:
 
-  - [Transcribing](whisper_transcribe.py)
+  - [Transcribing](models/whisper_transcribe.py)
 
 - Wav2Vec 2.0:
 
-  - [Fine-tuning](wav2vec2_finetune.py)
+  - [Fine-tuning](fine-tuning/wav2vec2_finetune.py)
 
 - Data processing & helper functions:
 
-  - [Data preprocessor](data_preprocessor.py)
+  - [Data preprocessor](data_preparation/data_preprocessor.py)
     - Rename EAF files and audio files
     - Convert audio into WAV format
-  - [Dataset builder](dataset_builder.py)
+  - [Dataset builder](data_preparation/dataset_builder.py)
     - Slice audio into segments according to annotations
     - Pair segment filename and transcriptions into CSV files
-  - [Waveform extraction](waveform_extraction.py)
-  - [Audio pre-treatment](pretreat.py)
+  - [Waveform extraction](data_preparation/waveform_extraction.py)
+  - [Audio pre-treatment](data_preparation/pretreat.py)
     - Convert audio into Wav format
     - Change the parameters suitable for Whisper/Wav2Vec
     - Deletes noise and long pauses
-    - Diarizes speakers
+    - splits the audio into chunks and performs VAD
   - Speaker separation tools:
-    - [Asteroid](diarize_asteroid.py)
-    - [Payannote](payannote_overlap_speech_sep.py)
-  - [Helper functions for Whisper](utils.py)
-  - [Text normalizer](normalizer.py)
-  - [Building n-gram Language Model with KenLM](5gram_lm_kenlm.py)
+    - [Payannote + Whisper transcriber](diarization/whisper_diarizer.py)
+    - [Asteroid](diarization/diarize_asteroid.py)
+    - [Payannote](diarization/payannote_overlap_speech_sep.py)
+  - [Helper functions for Whisper](data_preparation/utils.py)
+  - [Text normalizer](data_preparation/normalizer.py)
+  - [Building n-gram Language Model with KenLM](fine-tuning/5gram_lm_kenlm.py)
 
 - Archived:
   - [Whisper with Pyannote pipeline](archived/whisper_pyannote.py)
