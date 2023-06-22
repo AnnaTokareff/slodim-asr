@@ -23,7 +23,7 @@
     - Convert audio into Wav format
     - Change the parameters suitable for Whisper/Wav2Vec
     - Deletes noise and long pauses
-    - splits the audio into chunks and performs VAD
+    - Splits the audio into chunks and performs VAD
   - Speaker separation tools:
     - [Payannote + Whisper transcriber](diarization/whisper_diarizer.py)
     - [Asteroid](diarization/diarize_asteroid.py)
